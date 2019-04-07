@@ -6,7 +6,7 @@ import { Constants } from 'expo';
 import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner } from 'native-base';
 import Modal from "react-native-modal";
 
-export default class Home extends React.Component {
+export default class Zone extends React.Component {
   static navigationOptions = ({ navigation }) => ({
     header: null,
   });
@@ -20,7 +20,7 @@ export default class Home extends React.Component {
     };
   }
 
-  componentDidMount() {
+  componentDidMount() { 
     this.bootstrapAsync()
   }
   
@@ -118,12 +118,12 @@ export default class Home extends React.Component {
     return (
       <Container style={styles.paddingStatusBar} >
         <Header>
-          {/* <Left>
-            <Button transparent>
+          <Left >
+            <Button transparent onPress={() => this.props.navigation.navigate('Home')}>
               <Icon name='arrow-back' />
             </Button>
-          </Left> */}
-          <Body style={{ marginLeft: 10 }} >
+          </Left>
+          <Body style={{ marginLeft: 1 }} >
             <Title>Zone</Title>
           </Body>
           <Right>
@@ -140,8 +140,8 @@ export default class Home extends React.Component {
           <List 
             dataArray={this.state.listZone}             
             renderRow={ (item) => (
-              <ListItem onPress={() => this.props.navigation.navigate('Zone')} >
-                <Left>
+              <ListItem  >
+                <Left >
                   <Text >{item}</Text>
                 </Left>
                 <Right>
