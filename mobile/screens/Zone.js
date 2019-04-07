@@ -3,10 +3,13 @@ import { Text, View, StyleSheet, Alert, AsyncStorage  } from 'react-native';
 import { Button as ButtonReact } from 'react-native';
 import { Constants } from 'expo';
 
-import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner } from 'native-base';
+import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner, Card, CardItem } from 'native-base';
 import Modal from "react-native-modal";
 
+const STORE_NODE_ID = '__NODE_ID'
+
 export default class Zone extends React.Component {
+  
   static navigationOptions = ({ navigation }) => ({
     header: null,
   });
@@ -16,7 +19,14 @@ export default class Zone extends React.Component {
     this.state = {
       listZone: [],
       isVisible: false,
-      zoneName: ''
+      zoneName: '',
+      nodeName: '',
+      nodeAlias: '', 
+      storeNodeId: '',
+      isStoreGetIt: false,
+      controlOnColor: 'gray',
+      controlOffColor: 'gray',
+      controlAutoColor: 'gray', 
     };
   }
 
@@ -25,65 +35,132 @@ export default class Zone extends React.Component {
   }
   
   bootstrapAsync = async () => {
-    let zoneFile = await AsyncStorage.getItem('zone')
+    const { navigation } = this.props;
+    const zoneName = navigation.getParam('zoneName');
+    this.setState({zoneName: zoneName})
+
+    let zoneFile = await AsyncStorage.getItem(zoneName)
     let zone = JSON.parse(zoneFile);
-    if( zone ) {
+    if( zone ) { 
       this.setState({
         listZone: zone
+      }, this.setState({
+        isStoreGetIt: true
+      }) )
+      console.log('bootstrapAsync listZone->', this.state.listZone) 
+    } 
+ 
+    let storeNodeIdFile = await AsyncStorage.getItem(STORE_NODE_ID)
+    let storeNodeId = JSON.parse(storeNodeIdFile);
+    if( storeNodeId ) {
+      this.setState({
+        storeNodeId: storeNodeId
       })
-      console.log('bootstrapAsync', this.state.listZone) 
+      console.log('bootstrapAsync storeNodeId ->', this.state.storeNodeId) 
     } 
   }
 
   saveZone = () => {
-    let zoneNameIndex = this.state.listZone.indexOf(this.state.zoneName)
+    // let zoneNameIndex = this.state.storeNodeId.indexOf(this.state.nodeName)    
+    // let zoneNameIndex = this.state.storeNodeId.findIndex(x => x.id === this.state.nodeName);
+    let zoneNameIndex = this.state.storeNodeId.map(function (obj) { return obj.id; }).indexOf(this.state.nodeName);
+    console.log('==============', this.state.storeNodeId, this.state.nodeName, zoneNameIndex) 
     if(zoneNameIndex >= 0) {
       Alert.alert(
         'Alert!',
-        'Zone name Exist',
+        'Node id Exist',
         [                        
           {text: 'OK', },
         ],
         {cancelable: false},
       )
-    } else if(this.state.zoneName == '') {
+    } else if(this.state.nodeName == '') {
       Alert.alert(
         'Alert!',
-        'Please Enter zone name',
+        'Please Enter Node id',
         [                        
           {text: 'OK', },
         ],
         {cancelable: false},
       )
     } else {
-      console.log(this.state.zoneName) 
+      console.log(this.state.nodeName) 
       this.setState({isVisible: false}) 
-      this.setState({ listZone: [...this.state.listZone, this.state.zoneName] },
+      this.setState({ listZone: [...this.state.listZone, 
+        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 0}
+      ] },
         async () => {
           console.log('It was saved successfully ->', this.state.listZone)
-          await AsyncStorage.setItem('zone', JSON.stringify(this.state.listZone) )
+          await AsyncStorage.setItem(this.state.zoneName, JSON.stringify(this.state.listZone) )
           .then( ()=>{
-              console.log('It was saved successfully')
+              console.log('It was saved successfully', this.state.zoneName)
           } )
           .catch( ()=>{
               console.log('There was an error saving the product')
           } )
+    
   
         } 
-      )
+      )  
       
+      this.setState({ storeNodeId: [...this.state.storeNodeId, 
+        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 0}
+      ] },
+        async () => {
+          await AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(this.state.storeNodeId) )
+            .then( ()=>{
+                console.log('saved saveStoreNodeId ->', this.state.storeNodeId)
+            } )
+            .catch( ()=>{
+                console.log('error saveStoreNodeId')
+            } )
+        } 
+      )  
+
     }    
       
   }
 
+  removeStoreNodeId = (id) => {
+    // console.log('removeStoreNodeId value->', value)
+    let array = this.state.storeNodeId.filter((item) => {
+      return item.id !== id
+    });
+    this.setState({ storeNodeId: array },
+      AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(this.state.storeNodeId) )
+        .then( ()=>{
+            console.log('saved saveStoreNodeId ->', this.state.storeNodeId)
+        } )
+        .catch( ()=>{
+            console.log('error saveStoreNodeId')
+        } )
+    )
+  }
+ 
+  control = (button) => {
+    console.log('control ->', button)
+    this.setState({controlOnColor: 'gray'})
+    this.setState({controlOffColor: 'gray'})
+    this.setState({controlAutoColor: 'gray'})
+    switch(button) {
+      case 'on':
+        this.setState({controlOnColor: 'blue'})
+        break
+      case 'off':
+        this.setState({controlOffColor: 'blue'})
+        break
+      case 'auto':
+        this.setState({controlAutoColor: 'blue'})
+        break
+    }
+  }
+ 
   render() {
-    const { navigation } = this.props;
-    const zoneName = navigation.getParam('zoneName');
-
-    deleteList = (value) => {
+    
+    deleteList = (id) => {
       Alert.alert(
         'Delete?',
-        value,
+        id,
         [
           {
             text: 'Cancel',
@@ -93,12 +170,12 @@ export default class Zone extends React.Component {
           {text: 'OK', 
           onPress: () => { 
             let array = this.state.listZone.filter((item) => {
-              return item !== value
+              return item.id !== id
             });
-            console.log('OK Pressed', value, array); 
+            console.log('OK Pressed', id, array); 
             this.setState( {listZone: array} ,
               async () => {
-                await AsyncStorage.setItem('zone', JSON.stringify(this.state.listZone) )
+                await AsyncStorage.setItem(this.state.zoneName, JSON.stringify(this.state.listZone) )
                 .then( ()=>{
                     console.log('delete, It was saved successfully')
                 } )
@@ -108,6 +185,22 @@ export default class Zone extends React.Component {
         
               } 
             ) 
+
+            let array1 = this.state.storeNodeId.filter((item) => {
+              return item.id !== id
+            });
+            this.setState({ storeNodeId: array1 },
+              async () => {
+                await AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(this.state.storeNodeId) )
+                  .then( ()=>{
+                      console.log('saved saveStoreNodeId ->', this.state.storeNodeId)
+                  } )
+                  .catch( ()=>{
+                      console.log('error saveStoreNodeId')
+                  } )
+              }
+            )
+            
           }},
         ],
         {cancelable: false},
@@ -127,31 +220,49 @@ export default class Zone extends React.Component {
             </Button>
           </Left>
           <Body style={{ marginLeft: 1 }} >
-            <Title>{zoneName}</Title>
+            <Title>{this.state.zoneName}</Title>
           </Body>
           <Right>
             <Button transparent>
               <Icon name='add' style={{ fontSize: 40,}} onPress={ () => { 
                 this.setState({ isVisible: true }) 
-                this.setState({ zoneName: '' })
+                this.setState({ nodeName: '' })
               }} />
             </Button>
           </Right>
         </Header>
         
         <Content >
+          <Card>
+            <CardItem>
+              <Body style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                <View style={{ marginLeft: 20, marginRight: 20,}}>
+                  <ButtonReact title="on" onPress={(text) => { this.control('on') } } color={ this.state.controlOnColor } style={{ fontSize: 40,}} />
+                </View>
+                <View style={{ marginLeft: 20, marginRight: 20,}}>
+                  <ButtonReact title="auto" onPress={() => { this.control('auto') } } color={ this.state.controlAutoColor } style={{ fontSize: 40,}} />
+                </View>
+                <View style={{ marginLeft: 20, marginRight: 20,}}>
+                  <ButtonReact title="off" onPress={() => { this.control('off') } } color={ this.state.controlOffColor } style={{ fontSize: 40,}} />
+                </View>
+              </Body>
+            </CardItem>
+          </Card>
           <List 
             dataArray={this.state.listZone}             
             renderRow={ (item) => (
               <ListItem  >
                 <Left >
-                  <Text >{item}</Text>
+                  <Text >{item.id}</Text>                  
                 </Left>
+                <Body style={{flex: 2}} >
+                  <Text>{item.alias}</Text>
+                </Body>
                 <Right>
                   <Icon 
                     name="md-remove-circle" 
-                    style={{color: 'red', fontSize: 35,}}
-                    onPress={ () => { deleteList(item) } }      
+                    style={{color: 'red', fontSize: 35, }}
+                    onPress={ () => { deleteList(item.id) } }      
                   />
                 </Right>
               </ListItem>
@@ -162,11 +273,18 @@ export default class Zone extends React.Component {
             isVisible={this.state.isVisible}
           >
             <View style={styles.modalContent} >
-              <Item floatingLabel last>
-                <Label>Zone name</Label>
+              <Item floatingLabel last style={{paddingTop:10}}> 
+                <Label>Alias</Label>
                 <Input 
-                  onChangeText={(text)=>{ this.setState({zoneName: text})}}
-                
+                  onChangeText={(text)=>{ this.setState({nodeAlias: text})}}
+              
+                />
+              </Item>
+              <Item floatingLabel last style={{paddingTop:10}}>
+                <Label>Node ID</Label>
+                <Input 
+                  onChangeText={(text)=>{ this.setState({nodeName: text})}}
+                  keyboardType="number-pad"
                 />
               </Item>
               <View style={styles.modalContentButton} >
@@ -186,19 +304,19 @@ export default class Zone extends React.Component {
         
 
         </Content>
-
-        { !this.state.listZone.length ? 
+        
+        { (!this.state.listZone.length && this.state.isStoreGetIt) ? 
           <Content contentContainerStyle={styles.container} >
             <Icon 
               name="md-add-circle" 
               style={{color: 'blue', fontSize: 50, marginRight: 5}}
               onPress={ () => { 
                 this.setState({ isVisible: true }) 
-                this.setState({ zoneName: '' })
+                this.setState({ nodeName: '' })
               }}
             />
             <Text style={{fontSize: 20, fontWeight: 'bold', }}>
-              Add zone 
+              Add node 
             </Text>
           </Content> 
           : null

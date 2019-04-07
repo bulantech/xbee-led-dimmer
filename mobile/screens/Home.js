@@ -6,6 +6,9 @@ import { Constants } from 'expo';
 import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner } from 'native-base';
 import Modal from "react-native-modal";
 
+const STORE_ZONE = '__ZONE'
+const STORE_NODE_ID = '__NODE_ID'
+
 export default class Home extends React.Component {
   static navigationOptions = ({ navigation }) => ({
     header: null,
@@ -16,7 +19,8 @@ export default class Home extends React.Component {
     this.state = {
       listZone: [],
       isVisible: false,
-      zoneName: ''
+      zoneName: '',
+      
     };
   }
 
@@ -25,7 +29,7 @@ export default class Home extends React.Component {
   }
   
   bootstrapAsync = async () => {
-    let zoneFile = await AsyncStorage.getItem('zone')
+    let zoneFile = await AsyncStorage.getItem(STORE_ZONE)
     let zone = JSON.parse(zoneFile);
     if( zone ) {
       this.setState({
@@ -61,7 +65,7 @@ export default class Home extends React.Component {
       this.setState({ listZone: [...this.state.listZone, this.state.zoneName] },
         async () => {
           console.log('It was saved successfully ->', this.state.listZone)
-          await AsyncStorage.setItem('zone', JSON.stringify(this.state.listZone) )
+          await AsyncStorage.setItem(STORE_ZONE, JSON.stringify(this.state.listZone) )
           .then( ()=>{
               console.log('It was saved successfully')
           } )
@@ -74,6 +78,30 @@ export default class Home extends React.Component {
       
     }    
       
+  }
+
+  clearStorage = async () => {
+    try {
+      console.log('clearStorage')
+      await AsyncStorage.setItem(STORE_ZONE, '[]' )
+        .then( ()=>{
+            console.log('It was saved successfully')
+        } )
+        .catch( ()=>{
+            console.log('There was an error saving the product')
+        } )
+
+      await AsyncStorage.setItem(STORE_NODE_ID, '[]' )
+        .then( ()=>{
+            console.log('It was saved successfully')
+        } )
+        .catch( ()=>{
+            console.log('There was an error saving the product')
+        } )
+    
+    } catch (error) {
+      console.log('clearStorage Error')
+    }
   }
 
   render() {
@@ -95,7 +123,7 @@ export default class Home extends React.Component {
             console.log('OK Pressed', value, array); 
             this.setState( {listZone: array} ,
               async () => {
-                await AsyncStorage.setItem('zone', JSON.stringify(this.state.listZone) )
+                await AsyncStorage.setItem(STORE_ZONE, JSON.stringify(this.state.listZone) )
                 .then( ()=>{
                     console.log('delete, It was saved successfully')
                 } )
@@ -118,11 +146,11 @@ export default class Home extends React.Component {
     return (
       <Container style={styles.paddingStatusBar} >
         <Header>
-          {/* <Left>
+          <Left>
             <Button transparent>
-              <Icon name='arrow-back' />
+              <Icon name='md-refresh' onPress={  this.clearStorage } />
             </Button>
-          </Left> */}
+          </Left>
           <Body style={{ marginLeft: 10 }} >
             <Title>Zone</Title>
           </Body>
