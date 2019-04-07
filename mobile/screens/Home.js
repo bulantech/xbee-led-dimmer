@@ -140,7 +140,9 @@ export default class Home extends React.Component {
           <List 
             dataArray={this.state.listZone}             
             renderRow={ (item) => (
-              <ListItem onPress={() => this.props.navigation.navigate('Zone')} >
+              <ListItem onPress={() => this.props.navigation.navigate('Zone',{
+                zoneName: item,
+              })} >
                 <Left>
                   <Text >{item}</Text>
                 </Left>

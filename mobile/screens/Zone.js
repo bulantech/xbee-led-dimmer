@@ -10,7 +10,7 @@ export default class Zone extends React.Component {
   static navigationOptions = ({ navigation }) => ({
     header: null,
   });
-  
+    
   constructor(props) {
     super(props);
     this.state = {
@@ -77,6 +77,9 @@ export default class Zone extends React.Component {
   }
 
   render() {
+    const { navigation } = this.props;
+    const zoneName = navigation.getParam('zoneName');
+
     deleteList = (value) => {
       Alert.alert(
         'Delete?',
@@ -124,7 +127,7 @@ export default class Zone extends React.Component {
             </Button>
           </Left>
           <Body style={{ marginLeft: 1 }} >
-            <Title>Zone</Title>
+            <Title>{zoneName}</Title>
           </Body>
           <Right>
             <Button transparent>
