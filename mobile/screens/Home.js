@@ -20,7 +20,7 @@ export default class Home extends React.Component {
       listZone: [],
       isVisible: false,
       zoneName: '',
-      
+      isStoreGetIt: false,
     };
   }
 
@@ -37,6 +37,9 @@ export default class Home extends React.Component {
       })
       console.log('bootstrapAsync', this.state.listZone) 
     } 
+    this.setState({
+      isStoreGetIt: true
+    })
   }
 
   saveZone = () => {
@@ -67,7 +70,15 @@ export default class Home extends React.Component {
           console.log('It was saved successfully ->', this.state.listZone)
           await AsyncStorage.setItem(STORE_ZONE, JSON.stringify(this.state.listZone) )
           .then( ()=>{
-              console.log('It was saved successfully')
+              console.log('1 It was saved successfully')
+          } )
+          .catch( ()=>{
+              console.log('There was an error saving the product') 
+          } )
+
+          await AsyncStorage.setItem(this.state.zoneName, '[]' )
+          .then( ()=>{
+              console.log('It was saved successfully 1', '>', this.state.zoneName, '<') 
           } )
           .catch( ()=>{
               console.log('There was an error saving the product')
@@ -75,9 +86,7 @@ export default class Home extends React.Component {
   
         } 
       )
-      
     }    
-      
   }
 
   clearStorage = async () => {
@@ -107,7 +116,7 @@ export default class Home extends React.Component {
   render() {
     deleteList = (value) => {
       Alert.alert(
-        'Delete?',
+        'Delete zone?',
         value,
         [
           {
@@ -130,6 +139,27 @@ export default class Home extends React.Component {
                 .catch( ()=>{
                     console.log('delete, There was an error saving the product')
                 } )
+
+                let zoneNameFile = await AsyncStorage.getItem(value)
+                zoneNameFile = JSON.parse(zoneNameFile);
+                console.log('zoneNameFile ->', zoneNameFile)
+                if(zoneNameFile.length == 0) {
+                  console.log('zoneNameFile == 0')
+                } else {
+                  let nodeIdNameFile = await AsyncStorage.getItem(STORE_NODE_ID)
+                  nodeIdNameFile = JSON.parse(nodeIdNameFile);
+                  console.log('nodeIdNameFile ->', nodeIdNameFile)
+                  for(let i=0; i<zoneNameFile.length; i++) {
+                    for(let j=0; j<nodeIdNameFile.length; j++) {
+                      if(zoneNameFile[i].id == nodeIdNameFile[j].id) {
+                        nodeIdNameFile = nodeIdNameFile.filter(e => e.id !== nodeIdNameFile[j].id)
+                        break
+                      }                    
+                    }
+                  }
+                  console.log('2 nodeIdNameFile ->', nodeIdNameFile)
+                  await AsyncStorage.setItem(value, JSON.stringify(nodeIdNameFile))
+                }
         
               } 
             ) 
@@ -214,7 +244,7 @@ export default class Home extends React.Component {
 
         </Content>
 
-        { !this.state.listZone.length ? 
+        { (this.state.listZone.length == 0 && this.state.isStoreGetIt)  ? 
           <Content contentContainerStyle={styles.container} >
             <Icon 
               name="md-add-circle" 
@@ -246,6 +276,7 @@ const styles = StyleSheet.create({
     // backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'center',
     flexDirection: 'row',
   },
   modalContent: {

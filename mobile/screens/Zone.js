@@ -22,7 +22,7 @@ export default class Zone extends React.Component {
       zoneName: '',
       nodeName: '',
       nodeAlias: '', 
-      storeNodeId: '',
+      storeNodeId: [],
       isStoreGetIt: false,
       controlOnColor: 'gray',
       controlOffColor: 'gray',
@@ -32,6 +32,10 @@ export default class Zone extends React.Component {
 
   componentDidMount() { 
     this.bootstrapAsync()
+  }
+
+  componentWillUnmount() {
+    console.log('willunmount')
   }
   
   bootstrapAsync = async () => {
@@ -44,11 +48,12 @@ export default class Zone extends React.Component {
     if( zone ) { 
       this.setState({
         listZone: zone
-      }, this.setState({
-        isStoreGetIt: true
-      }) )
+      } )
       console.log('bootstrapAsync listZone->', this.state.listZone) 
     } 
+    this.setState({
+      isStoreGetIt: true
+    })
  
     let storeNodeIdFile = await AsyncStorage.getItem(STORE_NODE_ID)
     let storeNodeId = JSON.parse(storeNodeIdFile);
@@ -87,7 +92,7 @@ export default class Zone extends React.Component {
       console.log(this.state.nodeName) 
       this.setState({isVisible: false}) 
       this.setState({ listZone: [...this.state.listZone, 
-        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 0}
+        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 'o'}
       ] },
         async () => {
           console.log('It was saved successfully ->', this.state.listZone)
@@ -159,7 +164,7 @@ export default class Zone extends React.Component {
     
     deleteList = (id) => {
       Alert.alert(
-        'Delete?',
+        'Delete node id?',
         id,
         [
           {
@@ -215,7 +220,8 @@ export default class Zone extends React.Component {
       <Container style={styles.paddingStatusBar} >
         <Header>
           <Left >
-            <Button transparent onPress={() => this.props.navigation.navigate('Home')}>
+            <Button transparent onPress={() => { this.props.navigation.addListener; this.props.navigation.goBack()} }>
+            {/* navigate('Home')}> */}
               <Icon name='arrow-back' />
             </Button>
           </Left>
@@ -233,21 +239,26 @@ export default class Zone extends React.Component {
         </Header>
         
         <Content >
-          <Card>
-            <CardItem>
-              <Body style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
-                <View style={{ marginLeft: 20, marginRight: 20,}}>
-                  <ButtonReact title="on" onPress={(text) => { this.control('on') } } color={ this.state.controlOnColor } style={{ fontSize: 40,}} />
-                </View>
-                <View style={{ marginLeft: 20, marginRight: 20,}}>
-                  <ButtonReact title="auto" onPress={() => { this.control('auto') } } color={ this.state.controlAutoColor } style={{ fontSize: 40,}} />
-                </View>
-                <View style={{ marginLeft: 20, marginRight: 20,}}>
-                  <ButtonReact title="off" onPress={() => { this.control('off') } } color={ this.state.controlOffColor } style={{ fontSize: 40,}} />
-                </View>
-              </Body>
-            </CardItem>
-          </Card>
+
+          { (this.state.listZone.length > 0)  ? 
+            <Card>
+              <CardItem>
+                <Body style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'center', }}>
+                  <View style={{ marginLeft: 20, marginRight: 20,}}>
+                    <ButtonReact title="on" onPress={(text) => { this.control('on') } } color={ this.state.controlOnColor } style={{ fontSize: 40,}} />
+                  </View>
+                  <View style={{ marginLeft: 20, marginRight: 20,}}>
+                    <ButtonReact title="auto" onPress={() => { this.control('auto') } } color={ this.state.controlAutoColor } style={{ fontSize: 40,}} />
+                  </View>
+                  <View style={{ marginLeft: 20, marginRight: 20,}}>
+                    <ButtonReact title="off" onPress={() => { this.control('off') } } color={ this.state.controlOffColor } style={{ fontSize: 40,}} />
+                  </View>
+                </Body>
+              </CardItem>
+            </Card>
+            : null
+          }
+
           <List 
             dataArray={this.state.listZone}             
             renderRow={ (item) => (
@@ -269,6 +280,7 @@ export default class Zone extends React.Component {
             )}
           /> 
 
+          
           <Modal 
             isVisible={this.state.isVisible}
           >
@@ -305,7 +317,7 @@ export default class Zone extends React.Component {
 
         </Content>
         
-        { (!this.state.listZone.length && this.state.isStoreGetIt) ? 
+        { (this.state.listZone.length == 0 && this.state.isStoreGetIt)  ? 
           <Content contentContainerStyle={styles.container} >
             <Icon 
               name="md-add-circle" 
