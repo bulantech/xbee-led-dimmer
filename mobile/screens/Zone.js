@@ -28,6 +28,8 @@ export default class Zone extends React.Component {
       controlOffColor: 'gray',
       controlAutoColor: 'gray', 
     };
+
+    this.deleteList = this.deleteList.bind(this)
   }
 
   componentDidMount() { 
@@ -159,20 +161,20 @@ export default class Zone extends React.Component {
         break
     }
   }
- 
-  render() {
-    
-    deleteList = (id) => {
-      Alert.alert(
-        'Delete node id?',
-        id,
-        [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          {text: 'OK', 
+
+  deleteList = (id) => {
+    console.log('deleteList')
+    Alert.alert(
+      'Delete node id?',
+      id,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {
+          text: 'OK', 
           onPress: () => { 
             let array = this.state.listZone.filter((item) => {
               return item.id !== id
@@ -205,12 +207,15 @@ export default class Zone extends React.Component {
                   } )
               }
             )
-            
-          }},
-        ],
-        {cancelable: false},
-      );
-    }
+          }
+        },
+      ],
+      {cancelable: false},
+    )
+
+  }
+ 
+  render() {
 
     modalButtonPress = (value) => {
       console.log(value)
@@ -273,7 +278,7 @@ export default class Zone extends React.Component {
                   <Icon 
                     name="md-remove-circle" 
                     style={{color: 'red', fontSize: 35, }}
-                    onPress={ () => { deleteList(item.id) } }      
+                    onPress={ () => {this.deleteList(item.id) } }       
                   />
                 </Right>
               </ListItem>

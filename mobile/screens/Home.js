@@ -22,6 +22,7 @@ export default class Home extends React.Component {
       zoneName: '',
       isStoreGetIt: false,
     };
+    this.deleteList = this.deleteList.bind(this)
   }
 
   componentDidMount() {
@@ -113,62 +114,63 @@ export default class Home extends React.Component {
     }
   }
 
-  render() {
-    deleteList = (value) => {
-      Alert.alert(
-        'Delete zone?',
-        value,
-        [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('Cancel Pressed'),
-            style: 'cancel',
-          },
-          {text: 'OK', 
-          onPress: () => { 
-            let array = this.state.listZone.filter((item) => {
-              return item !== value
-            });
-            console.log('OK Pressed', value, array); 
-            this.setState( {listZone: array} ,
-              async () => {
-                await AsyncStorage.setItem(STORE_ZONE, JSON.stringify(this.state.listZone) )
-                .then( ()=>{
-                    console.log('delete, It was saved successfully')
-                } )
-                .catch( ()=>{
-                    console.log('delete, There was an error saving the product')
-                } )
+  deleteList = (value) => {
+    Alert.alert(
+      'Delete zone?',
+      value,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'OK', 
+        onPress: () => { 
+          let array = this.state.listZone.filter((item) => {
+            return item !== value
+          });
+          console.log('OK Pressed', value, array); 
+          this.setState( {listZone: array} ,
+            async () => {
+              await AsyncStorage.setItem(STORE_ZONE, JSON.stringify(this.state.listZone) )
+              .then( ()=>{
+                  console.log('delete, It was saved successfully')
+              } )
+              .catch( ()=>{
+                  console.log('delete, There was an error saving the product')
+              } )
 
-                let zoneNameFile = await AsyncStorage.getItem(value)
-                zoneNameFile = JSON.parse(zoneNameFile);
-                console.log('zoneNameFile ->', zoneNameFile)
-                if(zoneNameFile.length == 0) {
-                  console.log('zoneNameFile == 0')
-                } else {
-                  let nodeIdNameFile = await AsyncStorage.getItem(STORE_NODE_ID)
-                  nodeIdNameFile = JSON.parse(nodeIdNameFile);
-                  console.log('nodeIdNameFile ->', nodeIdNameFile)
-                  for(let i=0; i<zoneNameFile.length; i++) {
-                    for(let j=0; j<nodeIdNameFile.length; j++) {
-                      if(zoneNameFile[i].id == nodeIdNameFile[j].id) {
-                        nodeIdNameFile = nodeIdNameFile.filter(e => e.id !== nodeIdNameFile[j].id)
-                        break
-                      }                    
-                    }
+              let zoneNameFile = await AsyncStorage.getItem(value)
+              zoneNameFile = JSON.parse(zoneNameFile);
+              console.log('zoneNameFile ->', zoneNameFile)
+              if(zoneNameFile.length == 0) {
+                console.log('zoneNameFile == 0')
+              } else {
+                let nodeIdNameFile = await AsyncStorage.getItem(STORE_NODE_ID)
+                nodeIdNameFile = JSON.parse(nodeIdNameFile);
+                console.log('nodeIdNameFile ->', nodeIdNameFile)
+                for(let i=0; i<zoneNameFile.length; i++) {
+                  for(let j=0; j<nodeIdNameFile.length; j++) {
+                    if(zoneNameFile[i].id == nodeIdNameFile[j].id) {
+                      nodeIdNameFile = nodeIdNameFile.filter(e => e.id !== nodeIdNameFile[j].id)
+                      break
+                    }                    
                   }
-                  console.log('2 nodeIdNameFile ->', nodeIdNameFile)
-                  await AsyncStorage.setItem(value, JSON.stringify(nodeIdNameFile))
                 }
-        
-              } 
-            ) 
-          }},
-        ],
-        {cancelable: false},
-      );
-    }
+                console.log('2 nodeIdNameFile ->', nodeIdNameFile)
+                await AsyncStorage.setItem(value, JSON.stringify(nodeIdNameFile))
+              }
+      
+            } 
+          ) 
+        }},
+      ],
+      {cancelable: false},
+    );
+  }
 
+  render() {
+    
     modalButtonPress = (value) => {
       console.log(value)
     }
@@ -208,7 +210,7 @@ export default class Home extends React.Component {
                   <Icon 
                     name="md-remove-circle" 
                     style={{color: 'red', fontSize: 35,}}
-                    onPress={ () => { deleteList(item) } }      
+                    onPress={ () => { this.deleteList(item) } }      
                   />
                 </Right>
               </ListItem>
