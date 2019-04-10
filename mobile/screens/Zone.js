@@ -6,9 +6,6 @@ import { Constants } from 'expo';
 import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner, Card, CardItem } from 'native-base';
 import Modal from "react-native-modal";
 
-import {MicroGear} from 'react-native-microgear'
-const appid = "xbeeDimmer";
-
 const STORE_NODE_ID = '__NODE_ID'
 
 export default class Zone extends React.Component {
@@ -35,57 +32,15 @@ export default class Zone extends React.Component {
 
     this.deleteList = this.deleteList.bind(this)
 
-    this.microgear = MicroGear.create({
-      key: 'wiobb8KnsAZzfoB',
-      secret: 'inyxXJbhHFBubrfLZmG2riqWR',
-      alias: "xbeeapp"
-    });
-
   }
 
   componentDidMount() { 
     this.bootstrapAsync()
-    this.microgear.connect(appid)
   }
 
   componentWillUnmount() {
     console.log('willunmount')
     this.netpie()
-  }
-  
-  netpie () {
-    this.microgear.on("connected", (...args) => {
-      console.log("netpie connected");
-      let counter = 0
-      this.microgear.subscribe("/gearname/#").then(() => {
-        console.log('subscribe..')
-      });
-
-      let interval = setInterval(() => {
-        let text = `${++counter} ok: ${new Date().getTime()}`
-        console.log("publishing..", text);
-        if (this.microgear.isConnected()) {
-          let random = (Math.round(Math.random() * 100) % 100)
-          // microgear.publish("/gearname/hello", text)
-          this.microgear.chat("temp", `${random}`);
-        }
-        else {
-          clearInterval(interval)
-        }
-      }, 1500)
-    });
-
-    this.microgear.on("message", (message) => {
-      console.log(`topic: ${message.destinationName}, payload: ${message.payloadString}`);
-      this.setTemp(parseFloat(message.payloadString))
-    });
-
-    this.microgear.on("disconnected", () => {
-      console.log("Disconnected...")
-      setTimeout(() => {
-        this.microgear.connect(appid)
-      }, 2000)
-    })
   }
 
   bootstrapAsync = async () => {
@@ -124,36 +79,6 @@ export default class Zone extends React.Component {
       })
       console.log('bootstrapAsync storeNodeId ->', this.state.storeNodeId) 
     } 
-  }
-
-  connectNetpie = () => {
-    const microgear = Microgear({
-      key: 'Smi2ZlBCKAER6Nh',
-      secret: 'ITGZ4gjkz4nUxguqyu5Yjx33F',
-      alias : "xbeeapp"         /*  optional  */
-    });
-  
-    microgear.on('message',function(topic,msg) {
-      document.getElementById("data").innerHTML = msg;
-    });
-  
-    microgear.on('connected', function() {
-      microgear.setAlias('htmlgear');    /* alias can be renamed anytime with this function */
-      console.log("Now I am connected with netpie...");
-      setInterval(function() {
-        microgear.chat("htmlgear","Hello from myself at "+Date.now());
-      },5000);
-    });
-  
-    microgear.on('present', function(event) {
-      console.log(event);
-    });
-  
-    microgear.on('absent', function(event) {
-      console.log(event);
-    });
-  
-    microgear.connect(APPID);
   }
 
   saveZone = () => {
@@ -283,9 +208,28 @@ export default class Zone extends React.Component {
       sendNodeState.push(y.state)
       return ( y );
     })   
-    console.log('sendNodeState ->', JSON.stringify(sendNodeState ))
+    let req = JSON.stringify(sendNodeState ).split('"').join('')
 
+    let res = this.netpiePublish(req)
+    console.log('netpiePublish ->', res)
+  }
 
+  netpiePublish = async (req) => {
+    try {
+      let response = await fetch( 'https://api.netpie.io/topic/xbeeDimmer/chat?retain&auth=Smi2ZlBCKAER6Nh:ITGZ4gjkz4nUxguqyu5Yjx33F',
+        {
+          method: 'PUT',
+          // headers: {
+          //   Accept: 'application/json',
+          //   'Content-Type': 'application/json',
+          // },
+          body: req
+        })
+      let responseJson = await response.json();
+      return responseJson.movies;
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   deleteList = (id) => {
