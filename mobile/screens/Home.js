@@ -77,7 +77,7 @@ export default class Home extends React.Component {
               console.log('There was an error saving the product') 
           } )
 
-          await AsyncStorage.setItem(this.state.zoneName, '[]' )
+          await AsyncStorage.setItem(this.state.zoneName, JSON.stringify([]) )
           .then( ()=>{
               console.log('It was saved successfully 1', '>', this.state.zoneName, '<') 
           } )

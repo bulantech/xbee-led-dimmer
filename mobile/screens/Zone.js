@@ -6,6 +6,9 @@ import { Constants } from 'expo';
 import { Container, Header, Left, Body, Right, Button, Icon, Title, List, ListItem, Content, Item, Label, Input, Spinner, Card, CardItem } from 'native-base';
 import Modal from "react-native-modal";
 
+import {MicroGear} from 'react-native-microgear'
+const appid = "xbeeDimmer";
+
 const STORE_NODE_ID = '__NODE_ID'
 
 export default class Zone extends React.Component {
@@ -27,19 +30,64 @@ export default class Zone extends React.Component {
       controlOnColor: 'gray',
       controlOffColor: 'gray',
       controlAutoColor: 'gray', 
+      controlState: 'f',
     };
 
     this.deleteList = this.deleteList.bind(this)
+
+    this.microgear = MicroGear.create({
+      key: 'wiobb8KnsAZzfoB',
+      secret: 'inyxXJbhHFBubrfLZmG2riqWR',
+      alias: "xbeeapp"
+    });
+
   }
 
   componentDidMount() { 
     this.bootstrapAsync()
+    this.microgear.connect(appid)
   }
 
   componentWillUnmount() {
     console.log('willunmount')
+    this.netpie()
   }
   
+  netpie () {
+    this.microgear.on("connected", (...args) => {
+      console.log("netpie connected");
+      let counter = 0
+      this.microgear.subscribe("/gearname/#").then(() => {
+        console.log('subscribe..')
+      });
+
+      let interval = setInterval(() => {
+        let text = `${++counter} ok: ${new Date().getTime()}`
+        console.log("publishing..", text);
+        if (this.microgear.isConnected()) {
+          let random = (Math.round(Math.random() * 100) % 100)
+          // microgear.publish("/gearname/hello", text)
+          this.microgear.chat("temp", `${random}`);
+        }
+        else {
+          clearInterval(interval)
+        }
+      }, 1500)
+    });
+
+    this.microgear.on("message", (message) => {
+      console.log(`topic: ${message.destinationName}, payload: ${message.payloadString}`);
+      this.setTemp(parseFloat(message.payloadString))
+    });
+
+    this.microgear.on("disconnected", () => {
+      console.log("Disconnected...")
+      setTimeout(() => {
+        this.microgear.connect(appid)
+      }, 2000)
+    })
+  }
+
   bootstrapAsync = async () => {
     const { navigation } = this.props;
     const zoneName = navigation.getParam('zoneName');
@@ -47,11 +95,22 @@ export default class Zone extends React.Component {
 
     let zoneFile = await AsyncStorage.getItem(zoneName)
     let zone = JSON.parse(zoneFile);
-    if( zone ) { 
+    console.log('zone ->', zone)
+    if( zone.length ) { 
       this.setState({
         listZone: zone
       } )
-      console.log('bootstrapAsync listZone->', this.state.listZone) 
+      this.setState({
+        controlState: zone[0].state
+      } )
+      console.log('bootstrapAsync listZone->', this.state.listZone, this.state.controlState) 
+      if(zone[0].state == 'o') {
+        this.setState({controlOnColor: 'blue'})
+      } else if(zone[0].state == 'a') {
+        this.setState({controlAutoColor: 'blue'})
+      } else {
+        this.setState({controlOffColor: 'blue'})
+      }
     } 
     this.setState({
       isStoreGetIt: true
@@ -65,6 +124,36 @@ export default class Zone extends React.Component {
       })
       console.log('bootstrapAsync storeNodeId ->', this.state.storeNodeId) 
     } 
+  }
+
+  connectNetpie = () => {
+    const microgear = Microgear({
+      key: 'Smi2ZlBCKAER6Nh',
+      secret: 'ITGZ4gjkz4nUxguqyu5Yjx33F',
+      alias : "xbeeapp"         /*  optional  */
+    });
+  
+    microgear.on('message',function(topic,msg) {
+      document.getElementById("data").innerHTML = msg;
+    });
+  
+    microgear.on('connected', function() {
+      microgear.setAlias('htmlgear');    /* alias can be renamed anytime with this function */
+      console.log("Now I am connected with netpie...");
+      setInterval(function() {
+        microgear.chat("htmlgear","Hello from myself at "+Date.now());
+      },5000);
+    });
+  
+    microgear.on('present', function(event) {
+      console.log(event);
+    });
+  
+    microgear.on('absent', function(event) {
+      console.log(event);
+    });
+  
+    microgear.connect(APPID);
   }
 
   saveZone = () => {
@@ -93,8 +182,14 @@ export default class Zone extends React.Component {
     } else {
       console.log(this.state.nodeName) 
       this.setState({isVisible: false}) 
+
+      let state = this.state.controlState
+      if(this.state.listZone.length) {
+        state = this.state.listZone[0].state
+      }
+
       this.setState({ listZone: [...this.state.listZone, 
-        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 'o'}
+        {alias: this.state.nodeAlias, id: this.state.nodeName, state: state}
       ] },
         async () => {
           console.log('It was saved successfully ->', this.state.listZone)
@@ -110,9 +205,7 @@ export default class Zone extends React.Component {
         } 
       )  
       
-      this.setState({ storeNodeId: [...this.state.storeNodeId, 
-        {alias: this.state.nodeAlias, id: this.state.nodeName, state: 0}
-      ] },
+      this.setState({ storeNodeId: [...this.state.storeNodeId, { alias: this.state.nodeAlias, id: this.state.nodeName, state: state } ]},
         async () => {
           await AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(this.state.storeNodeId) )
             .then( ()=>{
@@ -152,14 +245,47 @@ export default class Zone extends React.Component {
     switch(button) {
       case 'on':
         this.setState({controlOnColor: 'blue'})
+        this.setState({controlState: 'o'}, this.updateControlState)
         break
       case 'off':
         this.setState({controlOffColor: 'blue'})
+        this.setState({controlState: 'f'}, this.updateControlState)
         break
       case 'auto':
         this.setState({controlAutoColor: 'blue'})
+        this.setState({controlState: 'a'}, this.updateControlState)
         break
     }
+    
+  }
+
+  updateControlState = () => {
+    let nodeId = []
+    let updateListZone = this.state.listZone.map((y) => {
+      y.state = this.state.controlState
+      nodeId.push(y.id)
+      return ( y );
+    })
+    let updateStoreNodeId = this.state.storeNodeId.map((y) => {
+      let index = nodeId.indexOf(y.id) 
+      if( index >=0 ) {
+        y.state = this.state.controlState
+      }
+      return ( y );
+    })   
+    
+    AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(this.state.storeNodeId) )
+    AsyncStorage.setItem(this.state.zoneName, JSON.stringify(this.state.listZone) )
+
+    let sendNodeState = [] 
+    this.state.storeNodeId.map((y) => {
+      sendNodeState.push(y.id)
+      sendNodeState.push(y.state)
+      return ( y );
+    })   
+    console.log('sendNodeState ->', JSON.stringify(sendNodeState ))
+
+
   }
 
   deleteList = (id) => {
@@ -271,7 +397,7 @@ export default class Zone extends React.Component {
                 <Left >
                   <Text >{item.id}</Text>                  
                 </Left>
-                <Body style={{flex: 2}} >
+                <Body style={{flex: 1}} >
                   <Text>{item.alias}</Text>
                 </Body>
                 <Right>
