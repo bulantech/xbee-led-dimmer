@@ -158,7 +158,7 @@ export default class Home extends React.Component {
                   }
                 }
                 console.log('2 nodeIdNameFile ->', nodeIdNameFile)
-                await AsyncStorage.setItem(value, JSON.stringify(nodeIdNameFile))
+                await AsyncStorage.setItem(STORE_NODE_ID, JSON.stringify(nodeIdNameFile))
               }
       
             } 

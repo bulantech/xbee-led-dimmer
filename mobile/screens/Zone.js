@@ -40,7 +40,6 @@ export default class Zone extends React.Component {
 
   componentWillUnmount() {
     console.log('willunmount')
-    this.netpie()
   }
 
   bootstrapAsync = async () => {
