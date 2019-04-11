@@ -209,7 +209,7 @@ export default class Zone extends React.Component {
     })   
     let req = JSON.stringify(sendNodeState ).split('"').join('')
 
-    let res = this.netpiePublish(req)
+    let res = this.netpiePublish(req.split('[').join('').split(']').join(''))
     console.log('netpiePublish ->', res)
   }
 

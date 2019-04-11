@@ -178,11 +178,11 @@ export default class Home extends React.Component {
     return (
       <Container style={styles.paddingStatusBar} >
         <Header>
-          <Left>
+          {/* <Left>
             <Button transparent>
               <Icon name='md-refresh' onPress={  this.clearStorage } />
             </Button>
-          </Left>
+          </Left> */}
           <Body style={{ marginLeft: 10 }} >
             <Title>Zone</Title>
           </Body>
