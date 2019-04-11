@@ -8,6 +8,11 @@ import Modal from "react-native-modal";
 
 const STORE_NODE_ID = '__NODE_ID'
 
+const APPID   = "xbeeDimmer"
+const KEY     = "wiobb8KnsAZzfoB"
+const SECRET  = "inyxXJbhHFBubrfLZmG2riqWR"
+const ALIAS   = "esp8266"
+
 export default class Zone extends React.Component {
   
   static navigationOptions = ({ navigation }) => ({
@@ -215,7 +220,7 @@ export default class Zone extends React.Component {
 
   netpiePublish = async (req) => {
     try {
-      let response = await fetch( 'https://api.netpie.io/topic/xbeeDimmer/chat?retain&auth=Smi2ZlBCKAER6Nh:ITGZ4gjkz4nUxguqyu5Yjx33F',
+      let response = await fetch( 'https://api.netpie.io/microgear/'+APPID+'/'+ALIAS+'?retain&auth='+KEY+':'+SECRET,
         {
           method: 'PUT',
           // headers: {
