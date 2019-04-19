@@ -22,12 +22,13 @@ int ldrValue = 0;  // variable to store the value coming from the sensor
 String command = "E";
 int intervalSend = 10; //second
 int intervalSendCount = 0;
- 
+String message = "";
+
 /* If a new message arrives, do this */
 void onMsghandler(char *topic, uint8_t* msg, unsigned int msglen) {
 //    Serial.print("Incoming message --> ");
     msg[msglen] = '\0';
-   
+    message = String((char *)msg);
     command = String((char *)msg) + ",v," + String(ldrValue) + ",E";
 //    Serial.println((char *)msg);
 
@@ -114,6 +115,7 @@ void loop() {
 
             if(++intervalSendCount >= intervalSend) {
               intervalSendCount = 0;
+              if(message != "") command = message + ",v," + String(ldrValue) + ",E";
               Serial.println(command);
             }
         } 
