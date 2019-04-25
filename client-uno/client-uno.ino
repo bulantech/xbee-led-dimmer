@@ -3,7 +3,7 @@
 unsigned long previousMillis = 0;
 const long interval = 5000;
 
-int lampPin = A5;  
+int lampPin = 3; //analogWrite() pins 3, 5, 6, 9, 10, and 11 
 int nodeID = 1;
 String command = "";
 
@@ -108,17 +108,18 @@ void ldrBlink(int ldrValue, String state) {
   Serial.println(ldrValue);
   
   int ldrValueBuff;
-  if(ldrValue >= 1000) ldrValueBuff = 1023;
-  else if(ldrValue >= 850) ldrValueBuff = 1000;
-  else if(ldrValue >= 700) ldrValueBuff = 850;
-  else if(ldrValue >= 550) ldrValueBuff = 700;
-  else if(ldrValue >= 400) ldrValueBuff = 550;
-  else if(ldrValue >= 250) ldrValueBuff = 400;
+
+  if(ldrValue >= 1000) ldrValueBuff = 255;
+  else if(ldrValue >= 850) ldrValueBuff = 212;
+  else if(ldrValue >= 700) ldrValueBuff = 170;
+  else if(ldrValue >= 550) ldrValueBuff = 127;
+  else if(ldrValue >= 400) ldrValueBuff = 85;
+  else if(ldrValue >= 250) ldrValueBuff = 42;
   else ldrValueBuff = 0;
   
   if(state == "o") {
-    analogWrite(lampPin, 1023);
-    Serial.println("analogWrite = 1023" );
+    analogWrite(lampPin, 255);
+    Serial.println("analogWrite = 255" );
   } else if(state == "f") {
     analogWrite(lampPin, 0);
     Serial.println("analogWrite = 0");
